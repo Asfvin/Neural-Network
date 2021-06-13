@@ -1,0 +1,37 @@
+from tensorflow import keras
+from tensorflow.keras.layers import Dense, LSTM, RepeatVector, TimeDistributed
+from tensorflow.keras import regularizers
+from tensorflow.keras.models import Sequential
+
+# Long Short-Term Memory (LSTM) networks are a type of recurrent neural network capable of learning order dependence
+# in sequence prediction problems
+
+#  recurrent neural networks contain cycles that feed the network activations from a previous time step as inputs to
+#  the network to influence predictions at the current time step. These activations are stored in the internal states
+#  of the network which can in principle hold long-term temporal contextual information
+
+# Long Short-Term Memory (LSTM) is an RNN architecture specifically designed to address the vanishing gradient problem
+
+# Excellent Article to follow
+# https://machinelearningmastery.com/gentle-introduction-long-short-term-memory-networks-experts/
+
+def lstm_model(train_x, train_y, n_features):
+    """
+    :param train_x: The Independent Variable
+    :param train_y: The Dependent Variable
+    :param n_features: The Number of features used
+    :return: Creates an lstm nn
+    """
+    model = Sequential()
+    model.add(LSTM(10, activation='relu', input_shape=(train_x.shape[1], n_features),
+                   kernel_regularizer=regularizers.l1_l2(0.01, 0.01)))
+    model.add(RepeatVector(1))
+    model.add(LSTM(10, activation='relu', kernel_regularizer=regularizers.l1_l2(0.01, 0.01)))
+    model.add(RepeatVector(1))
+    model.add(LSTM(10, activation='relu', kernel_regularizer=regularizers.l1_l2(0.01, 0.01),
+                   return_sequences=True))
+    model.add(TimeDistributed(Dense(1)))
+    model.compile(optimizer='adam', loss='mse')
+    model.fit(train_x, train_y, epochs=100, verbose=1, batch_size=8,
+              callbacks=[keras.callbacks.EarlyStopping(patience=10)])
+    return model
